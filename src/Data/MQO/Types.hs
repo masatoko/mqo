@@ -1,5 +1,6 @@
 module Data.MQO.Types where
 
+import qualified Data.ByteString as BS
 import qualified Data.Vector as V
 
 import           Linear.V2

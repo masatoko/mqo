@@ -1,51 +1,45 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Data.MQO.Import
-  ( readMQO
+  ( mqo
   ) where
 
-import           Debug.Trace
-
+import qualified Data.ByteString            as BS
+import qualified Data.ByteString.Char8      as C8
 import qualified Data.Vector                as V
 import           Data.Void
 import           Linear.V2
 import           Linear.V3
 import           Linear.V4
-
-import qualified Data.ByteString            as BS
+import           Safe                       (readMay)
 
 import           Control.Monad.Combinators
 import           Text.Megaparsec
--- import Text.Megaparsec.Byte
-import           Text.Megaparsec.Char
-import qualified Text.Megaparsec.Char.Lexer as L
+import           Text.Megaparsec.Byte
+import qualified Text.Megaparsec.Byte.Lexer as L
 
 import           Data.MQO.Types
 
-type Parser = Parsec Void String
+type Parser = Parsec Void BS.ByteString
 
-readMQO :: FilePath -> IO () -- Object
-readMQO path = do
-  contents <- readFile path
-  parseTest metasequoia contents
-
-symbol :: String -> Parser String
+symbol :: BS.ByteString -> Parser BS.ByteString
 symbol = L.symbol space
 
 parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
 
-brackets :: Parser a -> Parser a
-brackets = between (symbol "{") (symbol "}")
+braces :: Parser a -> Parser a
+braces = between (symbol "{") (symbol "}")
 
 dquot :: Parser a -> Parser a
 dquot = between (symbol "\"") (symbol "\"")
 
 nameDQuoted :: Parser String
-nameDQuoted = dquot (some alphaNumChar)
+nameDQuoted = C8.unpack . BS.pack <$> dquot (some alphaNumChar)
 
 skipToHeadOf str = skipManyTill anyChar (lookAhead (string str))
 
-metasequoia :: Parser ([Material], Object)
-metasequoia = do
+mqo :: Parser ([Material], Object)
+mqo = do
   skipToHeadOf "Material"
   (,) <$> materials <*> object
 
@@ -55,7 +49,7 @@ object = do
   space
   name <- nameDQuoted
   space
-  (vs, fs) <- brackets content
+  (vs, fs) <- braces content
   return $ Object name (V.fromList vs) (V.fromList fs)
   where
     num = L.signed space L.float
@@ -67,14 +61,14 @@ object = do
     vertices :: Parser [Vertex]
     vertices = do
       string "vertex" *> space *> L.decimal *> space
-      brackets (some vertex)
+      braces (some vertex)
       where
         vertex = V3 <$> num <* space <*> num <* space <*> num <* space
 
     faces :: Parser [Face]
     faces = do
       string "face" *> space *> L.decimal *> space
-      brackets (some face)
+      braces (some face)
       where
         face = do
           skipMany tab
@@ -94,7 +88,7 @@ object = do
                      <*> uv <* space1
                      <*> uv
 
-        one :: Show a => String -> Parser a -> Parser a
+        one :: Show a => BS.ByteString -> Parser a -> Parser a
         one tag p = do
           string tag
           parens p
@@ -105,7 +99,7 @@ materials = do
   space
   some digitChar
   space
-  brackets (some material)
+  braces (some material)
 
 material :: Parser Material
 material = do
@@ -114,28 +108,29 @@ material = do
   Material
     <$> nameDQuoted
     <*  space
-    <*> ((toEnum . read) <$> one "shader")
+    <*> (toEnum <$> one "shader")
     <*  space
     <*> color
     <*  space
-    <*> doubleBy "dif"
+    <*> oneFloat "dif"
     <*  space
-    <*> doubleBy "amb"
+    <*> oneFloat "amb"
     <*  space
-    <*> doubleBy "emi"
+    <*> oneFloat "emi"
     <*  space
-    <*> doubleBy "spc"
+    <*> oneFloat "spc"
     <*  space
-    <*> doubleBy "power"
+    <*> oneFloat "power"
   where
-    doubleBy tag = read <$> one tag
-
-    one :: String -> Parser String
+    one :: BS.ByteString -> Parser Int
     one tag = do
       string tag
-      parens number
-      where
-        number = some (digitChar <|> char '.')
+      parens L.decimal
+
+    oneFloat :: BS.ByteString -> Parser Double
+    oneFloat tag = do
+      string tag
+      parens L.float
 
     color :: Parser (V4 Double)
     color = do
