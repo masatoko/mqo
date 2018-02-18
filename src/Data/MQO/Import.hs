@@ -80,25 +80,17 @@ object = do
           where
             number = try L.float <|> (fromIntegral <$> L.decimal)
 
-            v3 = V3 <$> L.decimal <*  space1
-                    <*> L.decimal <*  space1
-                    <*> L.decimal
+            v3 = V3 <$> L.decimal <* space1 <*> L.decimal <* space1 <*> L.decimal
             uv = V2 <$> number <* space1 <*> number
-            uv3 = V3 <$> uv <* space1
-                     <*> uv <* space1
-                     <*> uv
+            uv3 = V3 <$> uv <* space1 <*> uv <* space1 <*> uv
 
         one :: Show a => BS.ByteString -> Parser a -> Parser a
-        one tag p = do
-          string tag
-          parens p
+        one tag p = string tag *> parens p
 
 materials :: Parser [Material]
 materials = do
-  string "Material"
-  space
-  some digitChar
-  space
+  string "Material" *> space
+  some digitChar *> space
   braces (some material)
 
 material :: Parser Material
@@ -106,39 +98,22 @@ material = do
   skipMany newline
   skipMany tab
   Material
-    <$> nameDQuoted
-    <*  space
-    <*> (toEnum <$> one "shader")
-    <*  space
-    <*> color
-    <*  space
-    <*> oneFloat "dif"
-    <*  space
-    <*> oneFloat "amb"
-    <*  space
-    <*> oneFloat "emi"
-    <*  space
-    <*> oneFloat "spc"
-    <*  space
+    <$> nameDQuoted <*  space
+    <*> (toEnum <$> oneInt "shader") <*  space
+    <*> color <*  space
+    <*> oneFloat "dif" <* space
+    <*> oneFloat "amb" <* space
+    <*> oneFloat "emi" <* space
+    <*> oneFloat "spc" <* space
     <*> oneFloat "power"
   where
-    one :: BS.ByteString -> Parser Int
-    one tag = do
-      string tag
-      parens L.decimal
-
-    oneFloat :: BS.ByteString -> Parser Double
-    oneFloat tag = do
-      string tag
-      parens L.float
+    oneInt tag = string tag *> parens L.decimal
+    oneFloat tag = string tag *> parens L.float
 
     color :: Parser (V4 Double)
-    color = do
-      string "col"
-      parens v4
+    color = string "col" *> parens v4
       where
-        v4 = V4 <$> double <* space
-                <*> double <* space
-                <*> double <* space
-                <*> double
-        double = L.float
+        v4 = V4 <$> L.float <* space
+                <*> L.float <* space
+                <*> L.float <* space
+                <*> L.float
