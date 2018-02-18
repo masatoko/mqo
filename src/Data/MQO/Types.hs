@@ -1,7 +1,8 @@
 module Data.MQO.Types where
 
 import qualified Data.ByteString as BS
-import qualified Data.Vector as V
+import qualified Data.Vector     as V
+import           Data.Word       (Word32)
 
 import           Linear.V2
 import           Linear.V3
@@ -13,7 +14,7 @@ type Vertex = V3 Float
 type UV = V2 Float
 
 data Face = Face
-  { faceVerts  :: V3 Index
+  { faceVerts  :: V3 Word32
   , faceMatIdx :: Index
   , faceUVs    :: V3 UV
   } deriving Show
