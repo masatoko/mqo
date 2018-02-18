@@ -69,25 +69,15 @@ object = do
 
     vertices :: Parser [Vertex]
     vertices = do
-      string "vertex"
-      space
-      some digitChar
-      space
-      between (symbol "{") (end >> symbol "}") (some (try vertex))
+      string "vertex" *> space *> L.decimal *> space
+      brackets (some vertex)
       where
-        end = newline >> tab
-        vertex = do
-          skipMany newline
-          skipMany tab
-          V3 <$> num <* space <*> num <* space <*> num
+        vertex = V3 <$> num <* space <*> num <* space <*> num <* space
 
     faces :: Parser [Face]
     faces = do
-      string "face"
-      space
-      some digitChar
-      space
-      between (symbol "{") (symbol "}") (some face)
+      string "face" *> space *> L.decimal *> space
+      brackets (some face)
       where
         face = do
           skipMany tab
