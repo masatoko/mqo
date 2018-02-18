@@ -1,6 +1,6 @@
 module Data.MQO.Types where
 
-import qualified Data.Vector.Unboxed as V
+import qualified Data.Vector as V
 
 import           Linear.V2
 import           Linear.V3
@@ -15,13 +15,13 @@ data Face = Face
   { faceVerts  :: V3 Index
   , faceMatIdx :: Index
   , faceUVs    :: V3 UV
-  }
+  } deriving Show
 
 data Object = Object
   { objectName     :: String
   , objectVertices :: V.Vector Vertex
   , objectFaces    :: V.Vector Face
-  }
+  } deriving Show
 
 --
 

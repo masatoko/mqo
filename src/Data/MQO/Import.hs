@@ -2,31 +2,30 @@ module Data.MQO.Import
   ( readMQO
   ) where
 
-import Debug.Trace
+import           Debug.Trace
 
-import Linear.V4
-import Data.Void
+import qualified Data.Vector                as V
+import           Data.Void
+import           Linear.V2
+import           Linear.V3
+import           Linear.V4
 
-import qualified Data.ByteString as BS
+import qualified Data.ByteString            as BS
 
-import Control.Monad.Combinators
-import Text.Megaparsec
+import           Control.Monad.Combinators
+import           Text.Megaparsec
 -- import Text.Megaparsec.Byte
-import Text.Megaparsec.Char
+import           Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import Data.MQO.Types
+import           Data.MQO.Types
 
 type Parser = Parsec Void String
 
 readMQO :: FilePath -> IO () -- Object
 readMQO path = do
   contents <- readFile path
-  -- putStrLn contents
-  -- parseTest test contents
-  parseTest materials mats
-  where
-    mats = "Material 2 {\n\t\"reddish\" shader(3) col(1.000 0.208 0.059 1.000) dif(0.800) amb(0.600) emi(0.287) spc(0.000) power(5.00)\n\t\"blue\" shader(3) col(0.259 0.278 1.000 1.000) dif(0.800) amb(0.600) emi(0.637) spc(0.000) power(5.00)\n}"
+  parseTest metasequoia contents
 
 symbol :: String -> Parser String
 symbol = L.symbol space
@@ -34,8 +33,84 @@ symbol = L.symbol space
 parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
 
+brackets :: Parser a -> Parser a
+brackets = between (symbol "{") (symbol "}")
+
 dquot :: Parser a -> Parser a
 dquot = between (symbol "\"") (symbol "\"")
+
+nameDQuoted :: Parser String
+nameDQuoted = dquot (some alphaNumChar)
+
+skipToHeadOf str = skipManyTill anyChar (lookAhead (string str))
+
+metasequoia :: Parser ([Material], Object)
+metasequoia = do
+  skipToHeadOf "Material"
+  (,) <$> materials <*> object
+
+object :: Parser Object
+object = do
+  string "Object"
+  space
+  name <- nameDQuoted
+  space
+  (vs, fs) <- brackets content
+  return $ Object name (V.fromList vs) (V.fromList fs)
+  where
+    num = L.signed space L.float
+
+    content = do
+      skipToHeadOf "vertex"
+      vs <- vertices
+      skipToHeadOf "face"
+      fs <- faces
+      return (vs, fs)
+
+    vertices :: Parser [Vertex]
+    vertices = do
+      string "vertex"
+      space
+      some digitChar
+      space
+      between (symbol "{") (end >> symbol "}") (some (try vertex))
+      where
+        end = newline >> tab
+        vertex = do
+          skipMany newline
+          skipMany tab
+          V3 <$> num <* space <*> num <* space <*> num
+
+    faces :: Parser [Face]
+    faces = do
+      string "face"
+      space
+      some digitChar
+      space
+      between (symbol "{") (symbol "}") (some face)
+      where
+        face = do
+          skipMany tab
+          digitChar
+          space
+          Face <$> one "V" v3 <* space
+               <*> one "M" L.decimal <* space
+               <*> one "UV" uv3
+          where
+            number = (fromIntegral <$> L.decimal) <|> L.float
+
+            v3 = V3 <$> L.decimal <*  space1
+                    <*> L.decimal <*  space1
+                    <*> L.decimal
+            uv = V2 <$> number <* space1 <*> number
+            uv3 = V3 <$> uv <* space1
+                     <*> uv <* space1
+                     <*> uv
+
+        one :: Show a => String -> Parser a -> Parser a
+        one tag p = do
+          string tag
+          parens p
 
 materials :: Parser [Material]
 materials = do
@@ -43,14 +118,14 @@ materials = do
   space
   some digitChar
   space
-  between (symbol "{") (symbol "}") (some material)
+  brackets (some material)
 
 material :: Parser Material
 material = do
   skipMany newline
   skipMany tab
   Material
-    <$> dquot (some (notChar '\"'))
+    <$> nameDQuoted
     <*  space
     <*> ((toEnum . read) <$> one "shader")
     <*  space
