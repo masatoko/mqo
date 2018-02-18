@@ -13,6 +13,7 @@ import Control.Monad.Combinators
 import Text.Megaparsec
 -- import Text.Megaparsec.Byte
 import Text.Megaparsec.Char
+import qualified Text.Megaparsec.Char.Lexer as L
 
 import Data.MQO.Types
 
@@ -23,15 +24,33 @@ readMQO path = do
   contents <- readFile path
   -- putStrLn contents
   -- parseTest test contents
-  parseTest material mat
+  parseTest materials mats
   where
-    mat = "\t\"reddish\" shader(3) col(1.000 0.208 0.059 1.000) dif(0.800) amb(0.600) emi(0.287) spc(0.000) power(5.00)"
+    mats = "Material 2 {\n\t\"reddish\" shader(3) col(1.000 0.208 0.059 1.000) dif(0.800) amb(0.600) emi(0.287) spc(0.000) power(5.00)\n\t\"blue\" shader(3) col(0.259 0.278 1.000 1.000) dif(0.800) amb(0.600) emi(0.637) spc(0.000) power(5.00)\n}"
+
+symbol :: String -> Parser String
+symbol = L.symbol space
+
+parens :: Parser a -> Parser a
+parens = between (symbol "(") (symbol ")")
+
+dquot :: Parser a -> Parser a
+dquot = between (symbol "\"") (symbol "\"")
+
+materials :: Parser [Material]
+materials = do
+  string "Material"
+  space
+  some digitChar
+  space
+  between (symbol "{") (symbol "}") (some material)
 
 material :: Parser Material
 material = do
-  tab
+  skipMany newline
+  skipMany tab
   Material
-    <$> between (char '\"') (char '\"') (some (notChar '\"'))
+    <$> dquot (some (notChar '\"'))
     <*  space
     <*> ((toEnum . read) <$> one "shader")
     <*  space
@@ -52,27 +71,17 @@ material = do
     one :: String -> Parser String
     one tag = do
       string tag
-      between (char '(') (char ')') number
+      parens number
+      where
+        number = some (digitChar <|> char '.')
 
     color :: Parser (V4 Double)
     color = do
       string "col"
-      between (char '(') (char ')') v4
+      parens v4
       where
         v4 = V4 <$> double <* space
                 <*> double <* space
                 <*> double <* space
                 <*> double
-        double = read <$> number
-
-    number = some (digitChar <|> char '.')
-
-test :: Parser [String]
-test =
-  some work
-  where
-    work = do
-      n <- some digitChar
-      traceM (show n)
-      space <|> (eol >> pure ())
-      return n
+        double = L.float
