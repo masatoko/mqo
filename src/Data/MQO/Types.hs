@@ -9,8 +9,8 @@ import           Linear.V4
 
 type Index = Int
 
-type Vertex = V3 Double
-type UV = V2 Double
+type Vertex = V3 Float
+type UV = V2 Float
 
 data Face = Face
   { faceVerts  :: V3 Index
@@ -37,10 +37,10 @@ data Shader
 data Material = Material
   { matName     :: String
   , matShader   :: Shader
-  , matColor    :: V4 Double
-  , matDiffuse  :: Double
-  , matAmbient  :: Double
-  , matEmissive :: Double
-  , matSpecular :: Double
-  , matSpcPower :: Double -- ^ Power of specular
+  , matColor    :: V4 Float
+  , matDiffuse  :: Float
+  , matAmbient  :: Float
+  , matEmissive :: Float
+  , matSpecular :: Float
+  , matSpcPower :: Float -- ^ Power of specular
   } deriving Show

@@ -110,7 +110,7 @@ material = do
     oneInt tag = string tag *> parens L.decimal
     oneFloat tag = string tag *> parens L.float
 
-    color :: Parser (V4 Double)
+    color :: Parser (V4 Float)
     color = string "col" *> parens v4
       where
         v4 = V4 <$> L.float <* space
