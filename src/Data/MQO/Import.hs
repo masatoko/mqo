@@ -60,12 +60,9 @@ object = do
   where
     num = L.signed space L.float
 
-    content = do
-      skipToHeadOf "vertex"
-      vs <- vertices
-      skipToHeadOf "face"
-      fs <- faces
-      return (vs, fs)
+    content = (,)
+      <$> (skipToHeadOf "vertex" *> vertices)
+      <*> (skipToHeadOf "face" *> faces)
 
     vertices :: Parser [Vertex]
     vertices = do
@@ -87,7 +84,7 @@ object = do
                <*> one "M" L.decimal <* space
                <*> one "UV" uv3
           where
-            number = (fromIntegral <$> L.decimal) <|> L.float
+            number = try L.float <|> (fromIntegral <$> L.decimal)
 
             v3 = V3 <$> L.decimal <*  space1
                     <*> L.decimal <*  space1
