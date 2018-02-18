@@ -1,6 +1,6 @@
 # mqo
 
-A minimum [Metasequoia](http://www.metaseq.net/) file parser
+A minimul mqo ([Metasequoia](http://www.metaseq.net/) file) importer for Haskell
 
 ```haskell
 import qualified Data.ByteString as BS
