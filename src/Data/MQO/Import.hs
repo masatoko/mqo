@@ -11,6 +11,7 @@ import           Linear.V2
 import           Linear.V3
 import           Linear.V4
 import           Safe                       (readMay)
+import Data.Word (Word8)
 
 import           Control.Monad.Combinators
 import           Text.Megaparsec
@@ -34,7 +35,10 @@ dquot :: Parser a -> Parser a
 dquot = between (symbol "\"") (symbol "\"")
 
 nameDQuoted :: Parser String
-nameDQuoted = C8.unpack . BS.pack <$> dquot (some alphaNumChar)
+nameDQuoted = toString <$> dquot (some (alphaNumChar <|> oneOf (BS.unpack ".\\")))
+  where
+    toString :: [Word8] -> String
+    toString = C8.unpack . BS.pack
 
 skipToHeadOf str = skipManyTill anyChar (lookAhead (string str))
 
@@ -72,17 +76,24 @@ object = do
       where
         face = do
           skipMany tab
-          digitChar
+          numVert <- L.decimal
           space
-          Face <$> one "V" v3 <* space
-               <*> one "M" L.decimal <* space
-               <*> one "UV" uv3
+          case numVert of
+            3 -> Face3 <$> one "V" v3 <* space
+                       <*> one "M" L.decimal <* space
+                       <*> one "UV" uv3
+            4 -> Face4 <$> one "V" v4 <* space
+                       <*> one "M" L.decimal <* space
+                       <*> one "UV" uv4
+            _ -> error $ "Unexpected num of face vertices: " ++ show numVert
           where
-            number = try L.float <|> (fromIntegral <$> L.decimal)
+            number = L.signed space (try L.float <|> (fromIntegral <$> L.decimal))
 
             v3 = V3 <$> L.decimal <* space1 <*> L.decimal <* space1 <*> L.decimal
-            uv = V2 <$> number <* space1 <*> number
+            v4 = V4 <$> L.decimal <* space1 <*> L.decimal <* space1 <*> L.decimal <* space1 <*> L.decimal
             uv3 = V3 <$> uv <* space1 <*> uv <* space1 <*> uv
+            uv4 = V4 <$> uv <* space1 <*> uv <* space1 <*> uv <* space1 <*> uv
+            uv = V2 <$> number <* space1 <*> number
 
         one :: Show a => BS.ByteString -> Parser a -> Parser a
         one tag p = string tag *> parens p
@@ -106,9 +117,13 @@ material = do
     <*> oneFloat "emi" <* space
     <*> oneFloat "spc" <* space
     <*> oneFloat "power"
+    <*> optional (oneFloat "reflect") <* space
+    <*> optional (oneStr "tex") <* space
+    <*> optional (oneStr "bump") <* space
   where
     oneInt tag = string tag *> parens L.decimal
     oneFloat tag = string tag *> parens L.float
+    oneStr tag = string tag *> parens nameDQuoted
 
     color :: Parser (V4 Float)
     color = string "col" *> parens v4

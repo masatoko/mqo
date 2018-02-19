@@ -13,11 +13,18 @@ type Index = Int
 type Vertex = V3 Float
 type UV = V2 Float
 
-data Face = Face
-  { faceVerts  :: V3 Word32
-  , faceMatIdx :: Index
-  , faceUVs    :: V3 UV
-  } deriving Show
+data Face
+  = Face3
+    { faceVerts3 :: V3 Word32
+    , faceMatIdx :: Index
+    , faceUVs3   :: V3 UV
+    }
+  | Face4
+    { faceVerts4 :: V4 Word32
+    , faceMatIdx :: Index
+    , faceUVs4   :: V4 UV
+    }
+  deriving Show
 
 data Object = Object
   { objectName     :: String
@@ -44,4 +51,7 @@ data Material = Material
   , matEmissive :: Float
   , matSpecular :: Float
   , matSpcPower :: Float -- ^ Power of specular
+  , matReflect  :: Maybe Float
+  , matTexPath  :: Maybe FilePath -- ^ Texture file path
+  , matBumpPath :: Maybe FilePath -- ^ Bumpmap file path
   } deriving Show
