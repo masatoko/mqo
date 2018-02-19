@@ -35,7 +35,7 @@ dquot :: Parser a -> Parser a
 dquot = between (symbol "\"") (symbol "\"")
 
 nameDQuoted :: Parser String
-nameDQuoted = toString <$> dquot (some (alphaNumChar <|> oneOf (BS.unpack ".\\")))
+nameDQuoted = toString <$> dquot (some (noneOf (BS.unpack "\"")))
   where
     toString :: [Word8] -> String
     toString = C8.unpack . BS.pack
@@ -56,7 +56,7 @@ object = do
   (vs, fs) <- braces content
   return $ Object name (V.fromList vs) (V.fromList fs)
   where
-    num = L.signed space L.float
+    num = L.signed space (try L.float <|> (fromIntegral <$> L.decimal))
 
     content = (,)
       <$> (skipToHeadOf "vertex" *> vertices)
