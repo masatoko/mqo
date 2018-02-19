@@ -117,6 +117,9 @@ material = do
     <*> oneFloat "emi" <* space
     <*> oneFloat "spc" <* space
     <*> oneFloat "power"
+    <*> optional (oneFloat3 "amb_col") <* space
+    <*> optional (oneFloat3 "emi_col") <* space
+    <*> optional (oneFloat3 "spc_col") <* space
     <*> optional (oneFloat "reflect") <* space
     <*> optional (oneStr "tex") <* space
     <*> optional (oneStr "bump") <* space
@@ -124,6 +127,9 @@ material = do
     oneInt tag = string tag *> parens L.decimal
     oneFloat tag = string tag *> parens L.float
     oneStr tag = string tag *> parens nameDQuoted
+    oneFloat3 tag = do
+      string tag
+      parens (V3 <$> L.float <* space <*> L.float <* space <*> L.float)
 
     color :: Parser (V4 Float)
     color = string "col" *> parens v4

@@ -50,6 +50,9 @@ data Material = Material
   , matEmissive :: Float
   , matSpecular :: Float
   , matSpcPower :: Float -- ^ Power of specular
+  , matAmbientCol  :: Maybe (V3 Float)
+  , matEmissiveCol :: Maybe (V3 Float)
+  , matSpecularCol :: Maybe (V3 Float)
   , matReflect  :: Maybe Float
   , matTexPath  :: Maybe FilePath -- ^ Texture file path
   , matBumpPath :: Maybe FilePath -- ^ Bumpmap file path
