@@ -2,7 +2,6 @@ module Data.MQO.Types where
 
 import qualified Data.ByteString as BS
 import qualified Data.Vector     as V
-import           Data.Word       (Word32)
 
 import           Linear.V2
 import           Linear.V3
@@ -15,12 +14,12 @@ type UV = V2 Float
 
 data Face
   = Face3
-    { faceVerts3 :: V3 Word32
+    { faceVerts3 :: V3 Index
     , faceMatIdx :: Index
     , faceUVs3   :: V3 UV
     }
   | Face4
-    { faceVerts4 :: V4 Word32
+    { faceVerts4 :: V4 Index
     , faceMatIdx :: Index
     , faceUVs4   :: V4 UV
     }
