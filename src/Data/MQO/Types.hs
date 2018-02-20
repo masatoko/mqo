@@ -8,7 +8,7 @@ import           Linear.V3
 import           Linear.V4
 
 type Index = Int
-type Radian = Double
+type Radian = Float
 
 type Vertex = V3 Float
 type UV = V2 Float
