@@ -8,6 +8,7 @@ import           Linear.V3
 import           Linear.V4
 
 type Index = Int
+type Radian = Double
 
 type Vertex = V3 Float
 type UV = V2 Float
@@ -27,6 +28,7 @@ data Face
 
 data Object = Object
   { objectName     :: String
+  , objectFacet    :: Radian
   , objectVertices :: V.Vector Vertex
   , objectFaces    :: V.Vector Face
   } deriving Show

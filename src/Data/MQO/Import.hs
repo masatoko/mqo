@@ -53,14 +53,19 @@ object = do
   space
   name <- nameDQuoted
   space
-  (vs, fs) <- braces content
-  return $ Object name (V.fromList vs) (V.fromList fs)
+  (facet, vs, fs) <- braces content
+  return $ Object name facet (V.fromList vs) (V.fromList fs)
   where
     num = L.signed space (try L.float <|> (fromIntegral <$> L.decimal))
 
-    content = (,)
-      <$> (skipToHeadOf "vertex" *> vertices)
+    content = (,,)
+      <$> (skipToHeadOf "facet" *> facet)
+      <*> (skipToHeadOf "vertex" *> vertices)
       <*> (skipToHeadOf "face" *> faces)
+      where
+        facet = string "facet" *> space *> (toRadian <$> L.float)
+          where
+            toRadian deg = pi * deg / 180
 
     vertices :: Parser [Vertex]
     vertices = do
