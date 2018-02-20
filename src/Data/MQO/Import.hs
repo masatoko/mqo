@@ -42,10 +42,10 @@ nameDQuoted = toString <$> dquot (some (noneOf (BS.unpack "\"")))
 
 skipToHeadOf str = skipManyTill anyChar (lookAhead (string str))
 
-mqo :: Parser ([Material], Object)
+mqo :: Parser ([Material], [Object])
 mqo = do
   skipToHeadOf "Material"
-  (,) <$> materials <*> object
+  (,) <$> materials <*> some object
 
 object :: Parser Object
 object = do
