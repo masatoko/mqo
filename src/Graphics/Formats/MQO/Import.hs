@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Graphics.Format.MQO.Import
+module Graphics.Formats.MQO.Import
   ( mqo
   ) where
 
@@ -18,7 +18,7 @@ import           Text.Megaparsec
 import           Text.Megaparsec.Byte
 import qualified Text.Megaparsec.Byte.Lexer as L
 
-import           Graphics.Format.MQO.Types
+import           Graphics.Formats.MQO.Types
 
 type Parser = Parsec Void BS.ByteString
 

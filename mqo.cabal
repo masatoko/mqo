@@ -15,9 +15,9 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Data.MQO
-                     , Data.MQO.Types
-                     , Data.MQO.Import
+  exposed-modules:     Graphics.Formats.MQO
+                     , Graphics.Formats.MQO.Types
+                     , Graphics.Formats.MQO.Import
   build-depends:
       base >= 4.7 && < 5
     , vector
