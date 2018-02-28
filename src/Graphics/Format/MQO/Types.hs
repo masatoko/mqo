@@ -1,4 +1,4 @@
-module Data.MQO.Types where
+module Graphics.Format.MQO.Types where
 
 import qualified Data.ByteString as BS
 import qualified Data.Vector     as V

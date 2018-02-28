@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Data.MQO.Import
+module Graphics.Format.MQO.Import
   ( mqo
   ) where
 
@@ -7,18 +7,18 @@ import qualified Data.ByteString            as BS
 import qualified Data.ByteString.Char8      as C8
 import qualified Data.Vector                as V
 import           Data.Void
+import           Data.Word                  (Word8)
 import           Linear.V2
 import           Linear.V3
 import           Linear.V4
 import           Safe                       (readMay)
-import Data.Word (Word8)
 
 import           Control.Monad.Combinators
 import           Text.Megaparsec
 import           Text.Megaparsec.Byte
 import qualified Text.Megaparsec.Byte.Lexer as L
 
-import           Data.MQO.Types
+import           Graphics.Format.MQO.Types
 
 type Parser = Parsec Void BS.ByteString
 
